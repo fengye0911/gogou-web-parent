@@ -66,7 +66,7 @@
                         this.$router.push({ path: '/mainPage' });
                       }
             })
-            //一下为模板自带方法
+            //以下为模板自带方法
             /*requestLogin(loginParams).then(data => {
               this.logining = false;
               //NProgress.done();
