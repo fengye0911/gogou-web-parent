@@ -51,7 +51,23 @@
             this.logining = true;
             //NProgress.start();
             var loginParams = { username: this.ruleForm2.account, password: this.ruleForm2.checkPass };
-            requestLogin(loginParams).then(data => {
+            this.$http.post('/login',loginParams)
+                    .then(res=>{
+                      console.debug(res);
+                      this.logining = false;
+                      let { message, success, resultObject } = res.data;
+                      if (!success) {//如果登录失败报错
+                        this.$message({
+                          message: message,
+                          type: 'error'
+                        });
+                      } else {//登录成功跳转主页面
+                        sessionStorage.setItem('user', JSON.stringify(resultObject));
+                        this.$router.push({ path: '/mainPage' });
+                      }
+            })
+            //一下为模板自带方法
+            /*requestLogin(loginParams).then(data => {
               this.logining = false;
               //NProgress.done();
               let { msg, code, user } = data;
@@ -64,7 +80,7 @@
                 sessionStorage.setItem('user', JSON.stringify(user));
                 this.$router.push({ path: '/mainPage' });
               }
-            });
+            });*/
           } else {
             console.log('error submit!!');
             return false;
