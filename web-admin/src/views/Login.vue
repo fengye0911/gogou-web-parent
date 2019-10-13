@@ -24,7 +24,7 @@
         logining: false,
         ruleForm2: {
           account: 'admin',
-          checkPass: '123456'
+          checkPass: 'admin'
         },
         rules2: {
           account: [
@@ -51,7 +51,7 @@
             this.logining = true;
             //NProgress.start();
             var loginParams = { username: this.ruleForm2.account, password: this.ruleForm2.checkPass };
-            this.$http.post('/login',loginParams)
+            this.$http.post('/plat/login',loginParams)
                     .then(res=>{
                       console.debug(res);
                       this.logining = false;
