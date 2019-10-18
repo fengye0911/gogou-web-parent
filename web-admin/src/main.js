@@ -17,31 +17,39 @@ import 'font-awesome/css/font-awesome.min.css'
 
 //全局导入axios
 import axios from 'axios'
-axios.defaults.baseURL='http://localhost:9527/services'
-Vue.prototype.$http = axios
+axios.defaults.baseURL='http://localhost:9527/services';
+Vue.prototype.$http = axios;
 
-Vue.use(ElementUI)
-Vue.use(VueRouter)
-Vue.use(Vuex)
+Vue.use(ElementUI);
+Vue.use(VueRouter);
+Vue.use(Vuex);
+
+//导入富文本编辑器
+import VueQuillEditor from 'vue-quill-editor'
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
+
+Vue.use(VueQuillEditor);
 
 //NProgress.configure({ showSpinner: false });
 
 const router = new VueRouter({
   routes
-})
+});
 
 router.beforeEach((to, from, next) => {
   //NProgress.start();
-  if (to.path == '/login') {
+  if (to.path === '/login') {
     sessionStorage.removeItem('user');
   }
   let user = JSON.parse(sessionStorage.getItem('user'));
-  if (!user && to.path != '/login') {
+  if (!user && to.path !== '/login') {
     next({ path: '/login' })
   } else {
     next()
   }
-})
+});
 
 //router.afterEach(transition => {
 //NProgress.done();
@@ -54,5 +62,5 @@ new Vue({
   store,
   //components: { App }
   render: h => h(App)
-}).$mount('#app')
+}).$mount('#app');
 

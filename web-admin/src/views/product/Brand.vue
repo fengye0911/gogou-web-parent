@@ -285,7 +285,6 @@
 				this.$http.post("/product/brand/json",para)
 						.then(res=>{
 							this.listLoading = false;
-							console.debug(res);
 							let {total,rows}=res.data;
 							this.brands=rows;
 							this.total=total;
@@ -351,7 +350,6 @@
 				this.fileList[0]={"url":"http://172.16.4.215"+this.editForm.logo};
 				this.editForm.productType=row.productType;
 				this.selectedType2=this.changeDetSelect(row.productType.id,this.producttypes);
-				console.debug(this.editForm);
 			},
 			//显示新增界面
 			handleAdd: function () {
