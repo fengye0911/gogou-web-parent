@@ -13,16 +13,16 @@
 					<el-button type="primary" @click="handleAdd">新增</el-button>
 				</el-form-item>
 				<el-form-item>
-					<el-button type="primary" @click="handleAdd">显示属性</el-button>
+					<el-button type="primary" @click="handleViewsPropeties">显示属性</el-button>
 				</el-form-item>
 				<el-form-item>
-					<el-button type="primary" @click="handleAdd">SKU属性</el-button>
+					<el-button type="primary" @click="handleSkuProperties">SKU属性</el-button>
 				</el-form-item>
 				<el-form-item>
-					<el-button type="primary" @click="handleAdd">上架</el-button>
+					<el-button type="primary" @click="handleOnSale">上架</el-button>
 				</el-form-item>
 				<el-form-item>
-					<el-button type="primary" @click="handleAdd">下架</el-button>
+					<el-button type="primary" @click="handleOffSale">下架</el-button>
 				</el-form-item>
 			</el-form>
 		</el-col>
@@ -119,7 +119,46 @@
 				<el-button type="primary" @click.native="editSubmit" :loading="editLoading">提交</el-button>
 			</div>
 		</el-dialog>
-
+		<!--SKU属性维护-->
+		<el-dialog title="SKU属性"  v-model="skuPropertieFormVisible">
+			<el-card class="box-card" v-for="skuProperty in skuProperties">
+				<div slot="header" class="clearfix" >
+					<span style="line-height: 36px;">{{skuProperty.specName}}</span>
+				</div>
+				<div v-for="index in skuProperty.options.length+1" class="text item">
+					<el-row>
+						<el-col :span="18">
+							<el-input v-model="skuProperty.options[index-1]" auto-complete="off"></el-input>
+						</el-col>
+						<el-col :span="6">
+							<el-button @click="removeProperty(i,index-1)">删除</el-button>
+						</el-col>
+					</el-row>
+				</div>
+			</el-card>
+			<div>
+				<el-table :data="skus" highlight-current-row style="width: 100%;">
+					<el-table-column v-for="(value,key) in skus[0]" :label="key" :prop="key"  width="100%">
+					</el-table-column>
+				</el-table>
+			</div>
+			<div slot="footer" class="dialog-footer">
+				<el-button @click.native="skuPropertieFormVisible = false">取消</el-button>
+				<el-button type="primary" @click.native="updateViewsPropertie">提交</el-button>
+			</div>
+		</el-dialog>
+		<!--显示属性维护-->
+		<el-dialog title="显示属性"  v-model="viewsPropertieFormVisible">
+			<el-form v-for="viewPropertie in viewsProperties" label-width="80px" >
+				<el-form-item :label="viewPropertie.specName" >
+					<el-input v-model="viewPropertie.value" auto-complete="off"></el-input>
+				</el-form-item>
+			</el-form>
+			<div slot="footer" class="dialog-footer">
+				<el-button @click.native="viewsPropertieFormVisible = false">取消</el-button>
+				<el-button type="primary" @click.native="saveSkuProperties">提交</el-button>
+			</div>
+		</el-dialog>
 		<!--新增界面-->
 		<el-dialog title="新增" v-model="addFormVisible" :close-on-click-modal="false">
 			<el-form :model="addForm" label-width="80px" :rules="addFormRules" ref="addForm">
@@ -162,21 +201,9 @@
 					<el-input type="textarea" v-model="addForm.ext.description"></el-input>
 				</el-form-item>
 				<el-form-item label="商品详情">
-					<!-- 图片上传组件辅助-->
-<!--					<el-upload-->
-<!--							class="avatar-uploader"-->
-<!--							:action="serverUrl"-->
-<!--							name="img"-->
-<!--							:headers="header"-->
-<!--							:show-file-list="false"-->
-<!--							:on-success="uploadSuccess"-->
-<!--							:on-error="uploadError"-->
-<!--							:before-upload="beforeUpload">-->
-<!--					</el-upload>-->
 					<quill-editor
 							v-model="addForm.ext.richContent"
-							ref="myQuillEditor"
-					>
+							ref="myQuillEditor">
 					</quill-editor>
 				</el-form-item>
 			</el-form>
@@ -196,6 +223,14 @@
 	export default {
 		data() {
 			return {
+				skuPropertieFormVisible:false,
+				viewsPropertieFormVisible:false,
+				//SKU属性组合table
+				skus:[],
+				//SKU属性
+				skuProperties:[],
+				//显示属性
+				viewsProperties:[],
 				fileList:[],
 				selectedType:[],
 				editSelectedType:[],
@@ -259,10 +294,96 @@
 						richContent: ''
 					}
 				}
-
 			}
 		},
 		methods: {
+			//删除SKU属性选项
+			removeProperty(){
+
+			},
+			//保存Sku属性
+			saveSkuProperties(){
+
+			},
+			//显示属性更新
+			updateViewsPropertie(){
+				let productId = this.sels[0].id;
+				this.$http.post("/product/product/updateViewsProperties?productId="+productId,this.viewsProperties)
+						.then(res=>{
+							let{success,message}=res.data;
+							if(success){
+								this.$message({
+									message: '上传成功',
+									type: 'success'
+								});
+								this.viewsPropertieFormVisible = false;
+							}else {
+								this.$message({
+									message: message,
+									type: 'error'
+								});
+							}
+						})
+			},
+			//显示属性
+			handleViewsPropeties(){
+				//打开显示属性模态窗
+				let length = this.sels.length;
+				if(length===0){
+					this.$message({
+						message: '请选中一行数据',
+						type: 'warning'
+					});
+					return ;
+				}
+				if (length>1){
+					this.$message({
+						message: '只能选中一行数据',
+						type: 'warning'
+					});
+					return ;
+				}
+				let productId = this.sels[0].id;
+				this.viewsPropertieFormVisible=true;
+				this.viewsProperties=[];
+				this.$http.get("/product/product/getViewsProperties/"+productId)
+						.then(res=>{
+							this.viewsProperties=res.data;
+							console.debug(res.data)
+						})
+
+			},
+			//SKU属性
+			handleSkuProperties(){
+				//打开SKU属性模态窗
+				let length = this.sels.length;
+				if(length===0){
+					this.$message({
+						message: '请选中一行数据',
+						type: 'warning'
+					});
+					return ;
+				}
+				if (length>1){
+					this.$message({
+						message: '只能选中一行数据',
+						type: 'warning'
+					});
+					return ;
+				}
+				let productId = this.sels[0].id;
+				this.skuPropertieFormVisible=true;
+				this.skuProperties=[];
+				this.$http.get("/product/product/getSkuProperties/"+productId)
+						.then(res=>{
+							this.skuProperties=res.data;
+						})
+			},
+			//上架
+			handleOnSale(){},
+			//下架
+			handleOffSale(){},
+
 			changeDetSelect(key,treeData){
 				let arr = []; // 在递归时操作的数组
 				let returnArr = []; // 存放结果的数组
@@ -535,6 +656,7 @@
 					}
 				});
 			},
+			//选中的行
 			selsChange: function (sels) {
 				this.sels = sels;
 			},
@@ -565,6 +687,32 @@
 			this.getProducts();
 			this.loadTypeTree();
 			this.loadBrands();
+		},
+		watch:{
+			skuProperties:{
+				  handler(val,oldVal){
+				    //过滤数组张的空数据
+					let filtersSku = this.skuProperties.filter(s=>s.options.length>0);
+					let result=filtersSku.reduce((pre,cur,currentIndex)=>{
+						let tmp=[];
+						pre.forEach(p=>{
+							cur.options.forEach(o=>{
+								let sku=Object.assign({},p);
+								sku[cur.specName]=o;
+								if(currentIndex==filtersSku.length-1){
+									sku.price=0;
+									sku.stock=0;
+								}
+								tmp.push(sku);
+							})
+						})
+						return tmp;
+					},[{}]);
+					  this.skus=result;
+				  },
+				  // 需要深度监听
+				  deep: true
+				}
 		}
 	}
 
