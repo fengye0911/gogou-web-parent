@@ -138,13 +138,18 @@
 			</el-card>
 			<div>
 				<el-table :data="skus" highlight-current-row style="width: 100%;">
-					<el-table-column v-for="(value,key) in skus[0]" :label="key" :prop="key"  width="100%">
+					<el-table-column v-if="key!='price'&&key!='stock'&&key!='indexs'" v-for="(value,key) in skus[0]" :label="key" :prop="key"  width="100%">
+					</el-table-column>
+					<el-table-column v-if="(key=='price'||key=='stock')&&key!='indexs'" v-for="(value,key) in skus[0]" :label="key" :prop="key"  width="100%">
+						<template scope="scope">
+							<el-input v-model="scope.row[key]" auto-complete="false"/>
+						</template>
 					</el-table-column>
 				</el-table>
 			</div>
 			<div slot="footer" class="dialog-footer">
 				<el-button @click.native="skuPropertieFormVisible = false">取消</el-button>
-				<el-button type="primary" @click.native="updateViewsPropertie">提交</el-button>
+				<el-button type="primary" @click.native="updateSkuProperties">提交</el-button>
 			</div>
 		</el-dialog>
 		<!--显示属性维护-->
@@ -156,7 +161,7 @@
 			</el-form>
 			<div slot="footer" class="dialog-footer">
 				<el-button @click.native="viewsPropertieFormVisible = false">取消</el-button>
-				<el-button type="primary" @click.native="saveSkuProperties">提交</el-button>
+				<el-button type="primary" @click.native="updateViewsPropertie">提交</el-button>
 			</div>
 		</el-dialog>
 		<!--新增界面-->
@@ -302,8 +307,28 @@
 
 			},
 			//保存Sku属性
-			saveSkuProperties(){
-
+			updateSkuProperties(){
+				let productId = this.sels[0].id;
+				let param={};
+				param.skuProperties=this.skuProperties;
+				param.skus=this.skus;
+				console.debug("param",param);
+				this.$http.post("/product/product/saveSkuProperties?productId="+productId,param)
+						.then(res=>{
+							let{success,message}=res.data;
+							if(success){
+								this.$message({
+									message: '更新成功',
+									type: 'success'
+								});
+								this.skuPropertieFormVisible = false;
+							}else {
+								this.$message({
+									message: message,
+									type: 'error'
+								});
+							}
+						})
 			},
 			//显示属性更新
 			updateViewsPropertie(){
@@ -313,7 +338,7 @@
 							let{success,message}=res.data;
 							if(success){
 								this.$message({
-									message: '上传成功',
+									message: '更新成功',
 									type: 'success'
 								});
 								this.viewsPropertieFormVisible = false;
@@ -696,19 +721,26 @@
 					let result=filtersSku.reduce((pre,cur,currentIndex)=>{
 						let tmp=[];
 						pre.forEach(p=>{
-							cur.options.forEach(o=>{
+							cur.options.forEach((o,index)=>{
 								let sku=Object.assign({},p);
 								sku[cur.specName]=o;
-								if(currentIndex==filtersSku.length-1){
+								let lastIndex=sku.indexs;
+								if(!lastIndex) lastIndex="";
+								if(currentIndex===filtersSku.length-1){
 									sku.price=0;
 									sku.stock=0;
+									sku.indexs=lastIndex+index;
+								}else {
+									sku.indexs=lastIndex+index+"_";
 								}
+								sku.indexs=lastIndex;
 								tmp.push(sku);
 							})
-						})
+						});
 						return tmp;
 					},[{}]);
 					  this.skus=result;
+					  console.debug("result",result);
 				  },
 				  // 需要深度监听
 				  deep: true
